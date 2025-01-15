@@ -1,0 +1,733 @@
+---
+title: "Assignment05"
+output:
+  pdf_document: default
+  html_document: default
+date: '2022-06-02'
+---
+Problem A ::Data gathering and integration
+
+```{r cars}
+library(readr)
+library(dplyr)
+frameA <- read.csv("C:/Users/CDMStudent14/Documents/R/Assignment05/student_data.csv")
+frameB <- read.csv("C:/Users/CDMStudent14/Documents/R/Assignment05/student_data.csv")
+student_data <- rbind(frameA, frameB)
+str(student_data)
+student_data <- read.csv("C:/Users/CDMStudent14/Documents/R/Assignment05/student_data.csv")
+summary(student_data)
+head(student_data)
+```
+1. school - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)
+2. sex - student's sex (binary: 'F' - female or 'M' - male)
+3. age - student's age (numeric: from 15 to 22)
+4. address - student's home address type (binary: 'U' - urban or 'R' - rural)
+5. famsize - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)
+6. Pstatus - parent's cohabitation status (binary: 'T' - living together or 'A' - apart)
+7. Medu - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 – 5th to 9th grade, 3 – secondary education or 4 – higher education)
+8. Fedu - father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 – 5th to 9th grade, 3 – secondary education or 4 – higher education)
+9. Mjob - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+10. Fjob - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')
+11. reason - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')
+12. guardian - student's guardian (nominal: 'mother', 'father' or 'other')
+13. traveltime - home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour)
+14. studytime - weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours)
+15. failures - number of past class failures (numeric: n if 1<=n<3, else 4)
+16. schoolsup - extra educational support (binary: yes or no)
+17. famsup - family educational support (binary: yes or no)
+18. paid - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)
+19. activities - extra-curricular activities (binary: yes or no)
+20. nursery - attended nursery school (binary: yes or no)
+21. higher - wants to take higher education (binary: yes or no)
+22. internet - Internet access at home (binary: yes or no)
+23. romantic - with a romantic relationship (binary: yes or no)
+24. famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)
+25. freetime - free time after school (numeric: from 1 - very low to 5 - very high)
+26. goout - going out with friends (numeric: from 1 - very low to 5 - very high)
+27. Dalc - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)
+28. Walc - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)
+29. health - current health status (numeric: from 1 - very bad to 5 - very good)
+30. absences - number of school absences (numeric: from 0 to 93)
+31. These grades are related with the course subject, Math or Portuguese:
+
+    G1 - first period grade (numeric: from 0 to 20)
+    G2 - second period grade (numeric: from 0 to 20)
+    G3 - final grade (numeric: from 0 to 20, output target)
+
+
+
+Problem B :: Data Exploration
+```{r}
+str(student_data)
+```
+```{r}
+library(plotly)
+student_data %>%
+  group_by(age)%>%
+  summarize(count = n()) %>%
+  plot_ly(x =~age, y=~count, type = 'bar', 
+        text = ~count,
+        textposition = 'outside',
+        marker = list(color = 'rgb(158,202,225)',
+          line = list(color = 'black',
+                 width = 1.0))) %>%
+  layout(title = 'Distibution of Age')
+```
+```{r}
+student_data_gender_Stat <- student_data %>%
+  group_by(sex) %>%
+  summarise(count = n(),
+            percentage = round((n()/ nrow(student_data)), digits = 4))
+student_data_gender_Stat
+colors <- c('rgb(211,94,96)','rgb(114,147,203)')
+Gender_PieChart <- plot_ly(data = student_data_gender_Stat, labels = ~sex, values = ~percentage,
+                type = 'pie', sort = F,
+                textposition = 'inside',
+                textinfo = 'label+percent',
+                insidetextfont = list(color = 'White'),
+                hoverinfo = 'text',
+                text = ~count,
+                marker = list(colors = colors,
+                line = list(color = 'Black', width = 1)),
+                showlegend = TRUE) 
+Gender_PieChart <- Gender_PieChart %>% layout(title = 'Pie Chart of Gender')
+Gender_PieChart
+```
+```{r}
+student_data$Dalc <- as.factor(student_data$Dalc)  
+plyr::mapvalues
+student_data$Dalc <- plyr::mapvalues(student_data$Dalc, 
+                              from = 1:5, 
+                              to = c("Very Low", "Low", "Medium", "High", "Very High"))
+
+student_data$Walc <- as.factor(student_data$Walc)      
+student_data$Walc <- plyr::mapvalues(student_data$Walc, 
+                              from = 1:5, 
+                              to = c("Very Low", "Low", "Medium", "High", "Very High"))
+
+alcohol.d <- as.data.frame(table(frameB$Dalc))
+par.d <- as.numeric(alcohol.d$Freq)
+names(par.d) <- alcohol.d$Var1
+par.d <- round(par.d/10)
+
+waffle.col <- c("#00d27f","#adff00","#f9d62e","#fc913a","#ff4e50")
+library(waffle)
+c1 <- waffle(par.d, rows=5, 
+             #use_glyph="glass", 
+             size=2, 
+             title = "Workday alcohol consumption among students",
+             glyph_size=8,
+             xlab="1 glass == 10 students",
+             colors=waffle.col,
+             legend_pos= "top"
+             )
+
+alcohol.w <- as.data.frame(table(student_data$Walc))
+par.w <- as.numeric(alcohol.w$Freq)
+names(par.w) <- alcohol.w$Var1
+par.w <- round(par.w/10)
+
+c2 <- waffle(par.w, rows=5, 
+             #use_glyph="glass", 
+             size=2, 
+             title = "Weekend alcohol consumption among students",
+             glyph_size=8,
+             xlab="1 glass == 10 students",
+             colors=waffle.col,
+             legend_pos= "top"
+             )
+require("ggplot2")
+require("gridExtra")
+grid.arrange(c1,c2, nrow=2)
+```
+```{r}
+c3 <- ggplot(student_data, aes(x=Dalc, y=school, color=sex))+
+      geom_jitter(alpha=0.7)+
+       scale_colour_manual(values=c("#ff7f50", "#468499"))+
+      theme_bw()+
+      xlab("Workday alcohol consumption")+
+      ylab("School")+
+      ggtitle("Workday alcohol consumption per school and sex")
+
+
+c4 <- ggplot(student_data, aes(x=Walc, y=school, color=sex))+
+      geom_jitter(alpha=0.7)+
+       scale_colour_manual(values=c("#ff7f50", "#468499"))+
+      theme_bw()+
+      xlab("Weekend alcohol consumption")+
+      ylab("School")+
+      ggtitle("Weekend alcohol consumption per school and sex")
+
+grid.arrange(c3,c4, nrow=2)
+```
+
+```{r}
+#workday
+c5 <- ggplot(student_data, aes(x=Dalc, y=G1, fill=Dalc))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values=waffle.col)+
+      xlab("Alcohol consumption")+
+      ylab("Grade")+
+      ggtitle("First period grade")
+
+c6 <- ggplot(student_data, aes(x=Dalc, y=G2, fill=Dalc))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values=waffle.col)+
+      xlab("Alcohol consumption")+
+      ylab("Grade")+
+      ggtitle("Second period grade")
+
+c7 <- ggplot(student_data, aes(x=Dalc, y=G3, fill=Dalc))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values=waffle.col)+
+      xlab("Alcohol consumption")+
+      ylab("Grade")+
+      ggtitle("Final period grade")
+
+grid.arrange(c5,c6,c7,ncol=3)
+```
+```{r}
+#weekend
+c8 <- ggplot(student_data, aes(x=Walc, y=G1, fill=Walc))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values=waffle.col)+
+      xlab("Alcohol consumption")+
+      ylab("Grade")+
+      ggtitle("First period grade")
+
+c9 <- ggplot(student_data, aes(x=Walc, y=G2, fill=Walc))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values=waffle.col)+
+      xlab("Alcohol consumption")+
+      ylab("Grade")+
+      ggtitle("Second period grade")
+
+c10 <- ggplot(student_data, aes(x=Walc, y=G3, fill=Walc))+
+      geom_boxplot()+
+      theme_bw()+
+      theme(legend.position="none")+
+      scale_fill_manual(values=waffle.col)+
+      xlab("Alcohol consumption")+
+      ylab("Grade")+
+      ggtitle("Final period grade")
+
+grid.arrange(c8,c9,c10,ncol=3)
+```
+
+```{r}
+ggplot(student_data, aes(x=Dalc, y=absences, fill=Dalc))+
+      geom_violin()+
+      scale_fill_manual(values = waffle.col)+
+      theme_bw()+
+      theme(legend.position="none")+
+      ggtitle("Absences distribution per Workday alcohol consumption")+
+      xlab("Alcohol consumption")+
+      ylab("Number of school absences")
+```
+The very high alcohol consumption category has an interesting shape as it expends while others tend to decrease. We can also notice it is nicely shaped as a bottle
+
+```{r}
+ggplot(student_data, aes(x=Walc, y=absences, fill=Walc))+
+      geom_violin()+
+      scale_fill_manual(values = waffle.col)+
+      theme_bw()+
+      theme(legend.position="none")+
+      ggtitle("Absences distribution per Weekend alcohol consumption")+
+      xlab("Alcohol consumption")
+```
+
+Alcohol consumption and student’s age
+```{r}
+ggplot(student_data, aes(x=age, fill=Dalc))+
+      geom_histogram(binwidth=1, colour="black")+
+      facet_grid(~Dalc)+
+      scale_fill_manual(values= waffle.col)+
+      theme_bw()+
+      theme(legend.position="none")+
+      ggtitle("Workday alcohol consumption per age")+
+      xlab("Student's age")  
+
+```
+
+```{r}
+student_data_area_Stat <- student_data %>%
+  group_by(address) %>%
+  summarise(count = n(),
+            percentage = round((n()/ nrow(student_data)), digits = 4))
+student_data_area_Stat
+colors <- c('rgb(211,94,96)','rgb(114,147,203)')
+Area_PieChart <- plot_ly(data = student_data_area_Stat, labels = ~address, values = ~percentage,
+                type = 'pie', sort = F,
+                textposition = 'inside',
+                textinfo = 'label+percent',
+                insidetextfont = list(color = 'White'),
+                hoverinfo = 'text',
+                text = ~count,
+                marker = list(colors = colors,
+                line = list(color = 'Black', width = 1)),
+                showlegend = TRUE) 
+Area_PieChart <- Area_PieChart %>% layout(title = 'Pie Chart of Area')
+Area_PieChart
+```
+
+```{r}
+student_data_Mjob_Stat <- student_data %>%
+  group_by(Mjob) %>%
+  summarise(count = n(),
+            percentage = round((n()/ nrow(student_data)), digits = 4))
+student_data_Mjob_Stat
+colors <- c('rgb(211,94,96)','rgb(114,147,203)')
+Mjob_PieChart <- plot_ly(data = student_data_Mjob_Stat, labels = ~Mjob, values = ~percentage,
+                type = 'pie', sort = F,
+                textposition = 'inside',
+                textinfo = 'label+percent',
+                insidetextfont = list(color = 'White'),
+                hoverinfo = 'text',
+                text = ~count,
+                marker = list(colors = colors,
+                line = list(color = 'Black', width = 1)),
+                showlegend = TRUE) 
+Mjob_PieChart <- Mjob_PieChart %>% layout(title = 'Pie Chart of Mother Job')
+Mjob_PieChart
+```
+
+```{r}
+student_data_Fjob_Stat <- student_data %>%
+  group_by(Fjob) %>%
+  summarise(count = n(),
+            percentage = round((n()/ nrow(student_data)), digits = 4))
+student_data_Fjob_Stat
+colors <- c('rgb(211,94,96)','rgb(114,147,203)')
+Fjob_PieChart <- plot_ly(data = student_data_Fjob_Stat, labels = ~Fjob, values = ~percentage,
+                type = 'pie', sort = F,
+                textposition = 'inside',
+                textinfo = 'label+percent',
+                insidetextfont = list(color = 'White'),
+                hoverinfo = 'text',
+                text = ~count,
+                marker = list(colors = colors,
+                line = list(color = 'Black', width = 1)),
+                showlegend = TRUE) 
+Fjob_PieChart <- Fjob_PieChart %>% layout(title = 'Pie Chart of Father Job')
+Fjob_PieChart
+```
+
+
+```{r}
+student_data_guardian_Stat <- student_data %>%
+  group_by(guardian) %>%
+  summarise(count = n(),
+            percentage = round((n()/ nrow(student_data)), digits = 4))
+student_data_guardian_Stat
+colors <- c('rgb(211,94,96)','rgb(114,147,203)')
+Guardian_PieChart <- plot_ly(data = student_data_guardian_Stat, labels = ~guardian, values = ~percentage,
+                type = 'pie', sort = F,
+                textposition = 'inside',
+                textinfo = 'label+percent',
+                insidetextfont = list(color = 'White'),
+                hoverinfo = 'text',
+                text = ~count,
+                marker = list(colors = colors,
+                line = list(color = 'Black', width = 1)),
+                showlegend = TRUE) 
+Guardian_PieChart <- Guardian_PieChart %>% layout(title = 'Pie Chart of Guardian`s')
+Guardian_PieChart
+
+```
+
+```{r}
+student_data %>%
+  group_by(traveltime)%>%
+  summarize(count = n()) %>%
+  plot_ly(x =~traveltime, y=~count, type = 'bar', 
+        text = ~count,
+        textposition = 'outside',
+        marker = list(color = 'rgb(158,202,225)',
+          line = list(color = 'black',
+                 width = 1.0))) %>%
+  layout(title = 'Distibution of traveltime')
+
+student_data %>%
+  group_by(studytime)%>%
+  summarize(count = n()) %>%
+  plot_ly(x =~studytime, y=~count, type = 'bar', 
+        text = ~count,
+        textposition = 'outside',
+        marker = list(color = 'rgb(158,202,225)',
+          line = list(color = 'black',
+                 width = 1.0))) %>%
+  layout(title = 'Distibution of studytime')
+```
+
+```{r}
+student_data %>% 
+  count(sex, schoolsup, sort = F) %>%
+  group_by(sex) %>%
+  mutate(prop = round((n / sum(n)),digits = 4)) %>%
+  plot_ly(x = ~sex, y=~prop, color = ~schoolsup, type = "bar",
+          text = ~paste(sex, prop*100 ,'%'),
+          textposition = 'outside') %>%
+    layout(barmode = 'Stacked',
+           title = 'Barplot of school support amongst Genders')
+```
+
+```{r}
+student_data %>% 
+  count(sex, famsup, sort = F) %>%
+  group_by(sex) %>%
+  mutate(prop = round((n / sum(n)),digits = 4)) %>%
+  plot_ly(x = ~sex, y=~prop, color = ~famsup, type = "bar",
+          text = ~paste(sex, prop*100 ,'%'),
+          textposition = 'outside') %>%
+    layout(barmode = 'Stacked',
+           title = 'Barplot of family support amongst Genders')
+```
+
+```{r}
+student_data %>%
+  count(studytime, failures, sort = F) %>%
+  mutate(proportion = round((n/sum(n)),digits=4)) %>%
+  plot_ly(x =~studytime, y=~proportion, color = ~failures, type = 'bar') %>%
+  layout(barmode = 'Group',
+         title = 'Barplot of failures vs studytime')
+```
+
+```{r}
+student_data %>%
+  ggplot(aes(x= age,fill=failures)) +
+  geom_histogram(binwidth =2, color="red") +
+  
+  xlab("age")+ ggtitle("Distribution of age with failures and Sex")+
+  facet_wrap(~sex)
+```
+```{r}
+library('tidyverse')
+data_2 <- student_data %>%
+  group_by(age, guardian) %>%
+  tally() %>%
+  complete(guardian, fill = list(n =0)) %>%
+  mutate(percentage = n / sum(n) *100)
+
+ggplot(data_2, aes(age, percentage, fill = guardian)) +
+  geom_bar(stat ='identity', position ='dodge') +
+  theme_bw()+ggtitle("Percentage of students according to age living with father/mother/others")
+```
+
+
+
+```{r}
+library('tidyverse')
+data_3 <- student_data %>%
+  group_by(age, school) %>%
+  tally() %>%
+  complete(school, fill = list(n =0)) %>%
+  mutate(percentage = n / sum(n) *100)
+
+ggplot(data_3, aes(age, percentage, fill = school)) +
+  geom_bar(stat ='identity', position ='dodge') +
+  theme_bw()+ggtitle("Percentage of students according to age who are studing in GP/MS")
+```
+
+
+problem C:: Data Cleaning
+```{r}
+student_data <- student_data %>% mutate_all(na_if,"")
+summary(student_data)
+colSums(is.na(student_data))
+```
+Selecting Useful variables/ remove non useful variables
+```{r}
+student_data_new <- student_data[, c("school","sex","age","address","Mjob","Fjob","guardian","traveltime","studytime","failures","schoolsup","famsup","Dalc","Walc")]
+summary(student_data_new)
+```
+
+```{r}
+boxplot((student_data_new[,c("age","traveltime","studytime","failures","Dalc","Walc")]))
+```
+```{r}
+library(dplyr)
+student_data_new_1 <-student_data %>% 
+  mutate(well_educated_family = cut((Fedu+Medu)/2,
+  breaks = c(0, 0.99,1.99,2.99,4),
+  labels = c("not educated","less educated","moderatly educated","highly educated")))
+#str(student_data_new_1)
+summary(student_data_new_1)
+```
+```{r}
+student_data_educate_Stat <- student_data_new_1 %>%
+  group_by( well_educated_family) %>%
+  summarise(count = n(),
+            percentage = round((n()/ nrow(student_data_new_1)), digits = 4))
+student_data_educate_Stat
+colors <- c('rgb(211,94,96)','rgb(114,147,203)')
+failures_PieChart <- plot_ly(data = student_data_educate_Stat, labels = ~well_educated_family, values = ~percentage,
+                type = 'pie', sort = F,
+                textposition = 'inside',
+                textinfo = 'label+percent',
+                insidetextfont = list(color = 'White'),
+                hoverinfo = 'text',
+                text = ~count,
+                marker = list(colors = colors,
+                line = list(color = 'Black', width = 1)),
+                showlegend = TRUE) 
+failures_PieChart <- failures_PieChart %>% layout(title = 'Pie Chart of family education status')
+failures_PieChart
+```
+```{r}
+library(tidyverse)
+library(dplyr)
+data_3 <- student_data_new_1 %>%
+  group_by(failures, well_educated_family) %>%
+  tally() %>%
+  complete(well_educated_family, fill = list(n =0)) %>%
+  mutate(percentage = n / sum(n) *100)
+
+ggplot(data_3, aes(failures, percentage, fill = well_educated_family)) +
+  geom_bar(stat ='identity', position ='dodge') +
+  theme_bw()+ggtitle("Percentage of students failures with respect to family education status")
+```
+Problem D :: Data Preprocessing
+
+updating the col of well_educated_family in the Student_data_new for dummy data frame student_data_new_1
+```{r}
+student_data_new["family_education"] <- mutate(student_data_new_1[c(34)])
+summary(student_data_new)
+head(student_data_new)
+```
+
+Creating dummy for well_educated_family(using father education & mother education)
+```{r}
+library(dplyr)
+
+student_data_new <- student_data %>% mutate(family_education = (Fedu+Medu)/2)
+
+student_data_new <-student_data_new %>% 
+  mutate(family_education = cut(family_education,
+  breaks = c(0, 0.99,1.99,2.99,4),
+  labels = c(1,2,3,4)))
+```
+
+Create dummy of Gender, 1 => Male 0 => Female
+```{r}
+student_data_new$Sex<-ifelse(student_data_new$sex=="M",1,0)
+```
+
+```{r}
+student_data_new <- student_data_new[, c("Sex","age","traveltime","studytime","failures","family_education","Dalc","Walc")]
+str(student_data_new)
+```
+
+```{r}
+library(heatmaply)
+heatmaply(
+  student_data, 
+  xlab = "age",
+  ylab = "failures", 
+  main = "Raw data"
+)
+```
+
+```{r}
+heatmaply(
+  normalize(student_data_new),
+  xlab = "age",
+  ylab = "failures", 
+  main = "Data Normalization"
+)
+summary(normalize(student_data_new))
+```
+```{r}
+heatmaply(
+  percentize(student_data_new),
+  xlab = "age",
+  ylab = "failures", 
+  main = "Percentile Transformation"
+)
+```
+
+Problem E :: Clustering
+
+PCA projection
+```{r}
+student_data_dummy <- data.frame(student_data_new)
+#summary(student_data_dummy)
+
+student_data_dummy$Sex <- as.numeric(student_data_dummy$Sex)
+student_data_dummy$age <- as.numeric(student_data_dummy$age)
+student_data_dummy$traveltime <- as.numeric(student_data_dummy$traveltime)
+student_data_dummy$studytime <- as.numeric(student_data_dummy$studytime)
+student_data_dummy$failures <- as.numeric(student_data_dummy$failures)
+student_data_dummy$family_education <- as.numeric(student_data_dummy$family_education)
+student_data_dummy$Dalc <- as.numeric(student_data_dummy$Dalc)
+student_data_dummy$Walc <- as.numeric(student_data_dummy$Walc)
+                                                  
+str(student_data_dummy)
+#sapply(student_data_dummy, class)
+student_data_new.pca <- prcomp(student_data_dummy, center = TRUE,scale. = TRUE)
+summary(student_data_new.pca)
+
+# loading library
+library(ggfortify)
+student_data_new.pca.plot <- autoplot(student_data_new.pca,
+						data = student_data_dummy,
+						color=Species)
+
+student_data_new.pca.plot
+
+biplot.student_data_new.pca <- biplot(student_data_new.pca)
+biplot.student_data_new.pca
+```
+
+MDS projection
+
+```{r}
+student_data_new_mds = smacof::mds(delta = student_data_dummy,ndim = 2, type = "ratio" )
+student_data_new_mds
+
+plot(student_data_new_mds)
+
+```
+```{r}
+set.seed(222)
+library(caret)
+library(gmodels)
+fit <- train(failures ~ .,data = student_data_dummy ,method ='knn',tuneLength =20,preProc = c("center","scale"))
+pred <- predict(fit, newdata = student_data_dummy)
+plot(pred)
+summary(pred)
+#pred<-ifelse(pred> 0.5,1,0)
+#student_data_dummy_1 <- student_data_dummy %>% slice(1:395)
+#student_data_dummy_1<-student_data_dummy_1[,-c(1)]
+#colnames(student_data_dummy_1) <- NULL
+#rownames(student_data_dummy_1) <- NULL
+#conf_mat<-confusionMatrix(as.factor(student_data_dummy_1),as.factor(pred),cutoff = 0.5)
+#conf_mat
+#conf_mat$table
+```
+
+f. Classification
+```{r}
+library(caTools)
+split <- sample.split(student_data_dummy, SplitRatio = 0.75)
+train <- subset(student_data_dummy, split==TRUE)
+test <- subset(student_data_dummy, split==FALSE)
+
+dim(train)
+
+dim(test)
+train_scale <- scale(train[,c("Walc","Dalc","failures")])
+test_scale <- scale(test[,c("Walc","Dalc","failures")])
+
+glimpse(train_scale)
+```
+
+RandomForst classifier
+```{r}
+set.seed(123)
+model_rf <- train(Sex ~., data = student_data_dummy, method ="rf",trControl = trainControl("cv", number =5),importance =TRUE)
+model_rf$results
+model_rf$resample
+model_rf$bestTune
+model_rf
+```
+
+
+```{r}
+library(randomForest)
+
+rfModel=randomForest(Walc~.,data=train,ntree=500,importance=T)
+plot(rfModel)
+```
+
+Prediction and accuracy
+```{r}
+predicted.classes <- model_rf %>% predict(student_data_dummy)
+#predicted.classes
+mean(predicted.classes )
+```
+
+
+```{r}
+set.seed(101)
+model_ksvm <- train(failures ~., data = student_data_dummy, method ="svmPoly",trControl = trainControl("cv", number =10),preProcess = c("center","scale"),tuneLength =4)
+model_ksvm
+model_ksvm$bestTune
+model_ksvm$results
+model_ksvm$resample
+model_ksvm
+```
+```{r}
+predicted.classes <- model_ksvm %>% predict(student_data_dummy)
+mean(predicted.classes)
+
+```
+As accuracy of Random forest is more than SVM classifier.Therefore we selected Randomforest classifier
+```{r}
+prediction_rf<-predict(model_rf,newdata = student_data_dummy)
+str(prediction_rf)
+plot(prediction_rf)
+summary(prediction_rf)
+auc(student_data_dummy$age,as.numeric(prediction_rf ))
+#conf_mat<-confusionMatrix(as.factor(prediction_rf),as.factor(student_data_dummy_1),positive ="1")
+#conf_mat
+#Error in confusionMatrix.default(as.factor(student_data_dummy$Sex), as.factor(prediction_rf), : the data cannot have more levels than the reference
+```
+```{r}
+
+```
+
+auc(student_data_dummy$age,as.numeric(prediction_rf ))
+```{r}
+library(rpart)
+classifier_data <- rpart(failures ~ Walc, data = student_data_dummy, method="class", minsplit = 10)
+summary(classifier_data)
+```
+
+g. Evaluation
+```{r}
+pred_1 <- predict(classifier_data, newdata = student_data_dummy)
+summary(pred_1)
+```
+```{r}
+library(verification)
+
+data<-data.frame(student_data_dummy)
+#names(data)<-c("failures","Walc")
+roc.plot(data$failures,prediction_rf)
+
+```
+auc(data$failures,as.numeric(prediction_rf ))
+The above plot is ROC and Area under the curve is 0.533. After doing classification the accuracy has increased from 47% to 53%
+
+
+h. Report
+
+
+1. Student Performance Data & Student Alcohol Consumption, data available on kaggle.com is used for prediction. I merged both files to find the percentage of failures with respect to alcohol consumption. New data named as Student_data. 
+
+2. In the data exploration dimension, 395 observations with 33 columns are found. Some are categorical and some are integer variables.  48.48% are Integer variables and 51.52% are categorical variables. Some visualizations are done on the data. We found that student consume more alcohol in weekends. The very high alcohol consumption category has an interesting shape as it expands while others tend to decrease. We can also notice it is nicely shaped as a bottle. Interestingly student age with 16 years is highest in all areas like less alcohol to high consumption.  But most of the 16 years students live with their mother. And Femal students are getting more support from their family then males. And same with school also. But surprisingly schools are not supporting students more.  
+
+3. Removing all the N/A in the data set (student_data), and removing all the non-useful variables. Using Mother education & Father Education, I developed Well Educated family. Because Father & mother are belonging to one family. We can observe that students with high failure rate are belongs to less educated families & less educated families and surprisingly students belongs to high educated families has not failed in exams.  
+
+4.Updating the col of well_educated_family in the Student_data_new for dummy data frame student_data_new_1. Creating dummy for well_educated_family(using father education & mother education) with family_education. And Create dummy of Gender, 1 => Male 0 => Female.  Applying “heatmaply” doing visualization for raw data( student_data) and applying visualization on normalized data. 
+
+5.PCA is one of the most used unsupervised learning algorithms, Doing PCA on the data set, and using “biplot” a two-dimensional chart that represents the relationship between the rows and columns of a data set. And doing MDS projection. 
+
+6.Doing Random forest and SVM to the data set, I got accuracy around 47% for randomforest & around 37.7% for SVM. Using “rpart” for building classification and regression trees. 
+
+7. At last ROC of best Randomforest model is plotted and Area under the curve is calculated ,which is 53.33%. ROC is better performance metrics as compared to Accuracy if data is imbalanced. 
+
+
+i-Reflection
+
+Data Science is an aggregation of numerous subjects encompassing math, statistics, programming, data engineering, and other topics. While each of them is a distinct and extensive subject of study in its own right, their union in Data Science yields a tremendously strong domain. Data Science is more than just slicing and dicing any given data collection; it's a scientific approach to data-driven problem solving that employs data-driven knowledge. It begins with meticulous issue formulation, data needs, data cleaning and exploration, hypothesis creation, and the application of algorithms to answer questions and approve/disapprove hypotheses - all while keeping the Data domain context in mind and verifying each step through data evidence. Data Science appears to be a logical extension of our thought process on the engineering evolution side. Data Science appears to be the obvious next step: we started with manual data collecting, then automated it with computers and software, and now we need the capacity to analyse data and derive insights from it. Data Science plays a role in achieving this goal. This might be a step toward Artificial Intelligence, or the capacity to make judgments that are similar to those made by humans.
