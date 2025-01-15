@@ -9,8 +9,8 @@
 
 4. Updating the col of well_educated_family in the Student_data_new for dummy data frame student_data_new_1. Creating a dummy for a well_educated_family(using father education & mother education) with family_education. And Create dummy of Gender, 1 => Male 0 => Female. Applying “heatmaply” doing visualization for raw data( student_data) and applying visualization on normalized data.
    
-5.PCA is one of the most used unsupervised learning algorithms, Doing PCA on the data set, and using “biplot” a two-dimensional chart that represents the relationship between the rows and columns of a data set. And doing MDS projection. 
+5. PCA is one of the most used unsupervised learning algorithms, Doing PCA on the data set, and using “biplot” a two-dimensional chart that represents the relationship between the rows and columns of a data set. And doing MDS projection. 
 
-6.Doing Random forest and SVM to the data set, I got accuracy around 74% for randomforest & around 62% for SVM. Using “rpart” for building classification and regression trees.
+6. Doing Random forest and SVM to the data set, I got accuracy around 74% for randomforest & around 62% for SVM. Using “rpart” for building classification and regression trees.
 
 7. At last ROC of best Randomforest model is plotted and Area under the curve is calculated ,which is 78.98%. ROC is better performance metrics as compared to Accuracy if data is imbalanced.
