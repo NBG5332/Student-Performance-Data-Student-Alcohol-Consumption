@@ -1,9 +1,9 @@
 ---
-title: "Student-Performance-Data-Student-Alcohol-Consumption"
+title: "Assignment05"
 output:
   pdf_document: default
   html_document: default
-
+date: '2022-06-02'
 ---
 Problem A ::Data gathering and integration
 
